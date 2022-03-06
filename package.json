@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/qvistdev09/conclude/issues"
   },
-  "homepage": "https://github.com/qvistdev09/conclude#readme"
+  "homepage": "https://github.com/qvistdev09/conclude#readme",
+  "devDependencies": {
+    "typescript": "^4.6.2"
+  }
 }
