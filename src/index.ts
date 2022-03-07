@@ -1,7 +1,7 @@
 import FS from "fs";
 import path from "path";
 
-const htmlSplit = /((?<![{}]){{.*}}(?![{}]))/g;
+const htmlSplit = /({{[^{}]*}})/g;
 const dataInterpolation = /^{{.+}}$/;
 const allBrackets = /[{}]/g;
 const spaces = /\s/g;
@@ -27,18 +27,17 @@ const resolveFloorLevelShard = (shard: string, data: any): string => {
   return shard;
 };
 
-const resolveTemplateShard = (shard: string, data: any): string => {
+const resolveTemplate = (template: string, data: any): string => {
   let output = "";
-  const splitShard = shard.split(htmlSplit).filter((str) => str !== "");
-  console.log(splitShard)
+  const splitShard = template.split(htmlSplit).filter((str) => str !== "");
   if (splitShard.length === 1) {
     output += resolveFloorLevelShard(splitShard[0], data);
   } else {
     splitShard.forEach((subShard) => {
-      output += resolveTemplateShard(subShard, data);
+      output += resolveTemplate(subShard, data);
     });
   }
   return output;
 };
 
-console.log(resolveTemplateShard(html, { name: "Oscar" }));
+console.log(resolveTemplate(html, { name: "Oscar", activity: "cook" }));
