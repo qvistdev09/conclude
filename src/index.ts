@@ -1,11 +1,7 @@
 import FS from "fs";
 import path from "path";
 
-const htmlSplit = /({{[^{}]*}})/g;
-const dataInterpolation = /^{{.+}}$/;
-const allBrackets = /[{}]/g;
-const spaces = /\s/g;
-
+const allBrackets = /\[:|:\]/g;
 const delimiters = /(\[:|:\])/g;
 const leftDelimiter = /\[:/g;
 const rightDelimiter = /:\]/g;
@@ -38,6 +34,13 @@ const consolidateShards = (fragmentedTemplate: string[], consolidated: string[] 
   return consolidateShards([joinedFragments, ...fragmentedTemplate.slice(2)], consolidated);
 };
 
+const splitTemplate = (template: string) => {
+  const fragmented = fragmentTemplate(template);
+  return consolidateShards(fragmented);
+};
+
+const spaces = /\s/g;
+
 const interpolateShardData = (shard: string, data: any): string => {
   const accessor = shard.replace(allBrackets, "").replace(spaces, "");
   const value = data[accessor];
@@ -50,6 +53,8 @@ const interpolateShardData = (shard: string, data: any): string => {
   return "";
 };
 
+const dataInterpolation = /^\[:.+:\]$/;
+
 const resolveFloorLevelShard = (shard: string, data: any): string => {
   if (dataInterpolation.test(shard)) {
     return interpolateShardData(shard, data);
@@ -58,8 +63,8 @@ const resolveFloorLevelShard = (shard: string, data: any): string => {
 };
 
 const conditionalShard = /^\[:#IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/;
-const matchCondition = /(?<=\().+(?=\))/;
-const matchResult = /(?<={)(.|[\n\s\r])+(?=})/;
+const matchCondition = /(?<=\()[^\(\)]+(?=\))/;
+const matchResult = /(?<={)(.|[\n\s\r])+(?=}(?!}))/;
 
 const getMatch = (regex: RegExp, str: string) => {
   const result = str.match(regex);
@@ -103,20 +108,40 @@ const resolveConditional = (shard: string, data: any) => {
   return "";
 };
 
+const cleanTemplate = (template: string) => {
+  return template.replace(/[\r\n]/g, "");
+};
+
+const resolveRecursively = (template: string, data: any) => {
+  let output = "";
+  const splitShard = splitTemplate(template)
+    .map((shard) => resolveConditional(shard, data))
+    .filter((str) => str !== "");
+  if (splitShard.length === 1) {
+    output += resolveFloorLevelShard(splitShard[0], data);
+  } else {
+    splitShard.forEach((subShard) => {
+      output += resolveRecursively(subShard, data);
+    });
+  }
+  return output;
+};
+
 const resolveTemplate = (template: string, data: any): string => {
-  const shards = consolidateShards(fragmentTemplate(template));
-  const resolvedConditionals = shards.map((shard) => resolveConditional(shard, data));
-  return resolvedConditionals.join("");
+  const cleaned = cleanTemplate(template);
+  return resolveRecursively(cleaned, data);
 };
 
 const data = {
   showName: true,
   showHobby: true,
+  hobby: "cooking",
+  intoCooking: true,
+  intoSports: true,
+  intoJogging: true,
+  intoProgramming: false,
   age: 25,
   limit: 25,
 };
-const resolvedTemplate = resolveTemplate(html.replace(/[\r\n]/g, ""), data);
 
-FS.writeFileSync("resolvedTemplate.html", resolvedTemplate);
-
-
+FS.writeFileSync("resolvedTemplate.html", resolveTemplate(html, data));

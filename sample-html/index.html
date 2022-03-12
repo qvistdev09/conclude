@@ -7,11 +7,15 @@
     <title>Document</title>
   </head>
   <body>
-    [:#IF (age <= limit) THEN {
-      <p>Oscar</p>
-    }:]
     [:#IF (showHobby) THEN {
-      <p>Programming</p>
+      [:#IF (intoCooking) THEN {
+        <p>I'm into cooking</p>
+      }:]
+      [:#IF (intoSports) THEN {
+        [:#IF (intoJogging) THEN {
+          <p>I'm into jogging</p>
+        }:]
+      }:]
     }:]
   </body>
 </html>
