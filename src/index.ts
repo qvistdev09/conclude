@@ -108,7 +108,7 @@ const resolveConditional = (shard: string, data: any) => {
   return "";
 };
 
-const cleanTemplate = (template: string) => {
+const removeLineBreaks = (template: string) => {
   return template.replace(/[\r\n]/g, "");
 };
 
@@ -127,12 +127,19 @@ const resolveRecursively = (template: string, data: any) => {
   return output;
 };
 
+const cleanSpacesBetweenTags = (str: string) => {
+  return str.replace(/(?<=>)\s+(?=<)/g, "");
+};
+
 const resolveTemplate = (template: string, data: any): string => {
-  const cleaned = cleanTemplate(template);
-  return resolveRecursively(cleaned, data);
+  const cleanedFromLineBreaks = removeLineBreaks(template);
+  return cleanSpacesBetweenTags(resolveRecursively(cleanedFromLineBreaks, data));
 };
 
 const data = {
+  name: 'Peter',
+  hiddenName: 'Hinga',
+  hidden: true,
   showName: true,
   showHobby: true,
   hobby: "cooking",
@@ -143,5 +150,6 @@ const data = {
   age: 25,
   limit: 25,
 };
+
 
 FS.writeFileSync("resolvedTemplate.html", resolveTemplate(html, data));
