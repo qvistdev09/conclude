@@ -7,6 +7,8 @@
     <title>Document</title>
   </head>
   <body>
-    <p>My name is {{ name }} and I like to {{ activity }}</p>
+    [:#IF (showName) THEN {
+      <p>[:name:]</p>
+    }:]
   </body>
 </html>

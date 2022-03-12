@@ -6,7 +6,42 @@ const dataInterpolation = /^{{.+}}$/;
 const allBrackets = /[{}]/g;
 const spaces = /\s/g;
 
+const delimiters = /(\[:|:\])/g;
+const leftDelimiter = /\[:/g;
+const rightDelimiter = /:\]/g;
+
 const html = FS.readFileSync(path.resolve(__dirname, "../sample-html/index.html"), "utf-8");
+
+const fragmentTemplate = (template: string) => {
+  return template.split(delimiters).filter((str) => str !== "");
+};
+
+const balancedDelimiters = (str: string) => {
+  return str.match(leftDelimiter)?.length === str.match(rightDelimiter)?.length;
+};
+
+const consolidateShards = (fragmentedTemplate: string[], consolidated: string[] = []): string[] => {
+  const [fragment] = fragmentedTemplate;
+  if (fragmentedTemplate.length === 1) {
+    consolidated.push(fragment);
+    return consolidated;
+  }
+  if (!leftDelimiter.test(fragment) && !rightDelimiter.test(fragment)) {
+    consolidated.push(fragment);
+    return consolidateShards(fragmentedTemplate.slice(1), consolidated);
+  }
+  if (balancedDelimiters(fragment)) {
+    consolidated.push(fragment);
+    return consolidateShards(fragmentedTemplate.slice(1), consolidated);
+  }
+  const joinedFragments = `${fragmentedTemplate[0]}${fragmentedTemplate[1]}`;
+  return consolidateShards([joinedFragments, ...fragmentedTemplate.slice(2)], consolidated);
+};
+
+const fragmentedTemplate = fragmentTemplate(html);
+
+console.log("!!!");
+console.log(consolidateShards(fragmentedTemplate));
 
 const interpolateShardData = (shard: string, data: any): string => {
   const accessor = shard.replace(allBrackets, "").replace(spaces, "");
@@ -39,5 +74,3 @@ const resolveTemplate = (template: string, data: any): string => {
   }
   return output;
 };
-
-console.log(resolveTemplate(html, { name: "Oscar", activity: "cook" }));
