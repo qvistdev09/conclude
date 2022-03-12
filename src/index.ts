@@ -38,11 +38,6 @@ const consolidateShards = (fragmentedTemplate: string[], consolidated: string[] 
   return consolidateShards([joinedFragments, ...fragmentedTemplate.slice(2)], consolidated);
 };
 
-const fragmentedTemplate = fragmentTemplate(html);
-
-console.log("!!!");
-console.log(consolidateShards(fragmentedTemplate));
-
 const interpolateShardData = (shard: string, data: any): string => {
   const accessor = shard.replace(allBrackets, "").replace(spaces, "");
   const value = data[accessor];
@@ -62,15 +57,66 @@ const resolveFloorLevelShard = (shard: string, data: any): string => {
   return shard;
 };
 
-const resolveTemplate = (template: string, data: any): string => {
-  let output = "";
-  const splitShard = template.split(htmlSplit).filter((str) => str !== "");
-  if (splitShard.length === 1) {
-    output += resolveFloorLevelShard(splitShard[0], data);
-  } else {
-    splitShard.forEach((subShard) => {
-      output += resolveTemplate(subShard, data);
-    });
+const conditionalShard = /^\[:#IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/;
+const matchCondition = /(?<=\().+(?=\))/;
+const matchResult = /(?<={)(.|[\n\s\r])+(?=})/;
+
+const getMatch = (regex: RegExp, str: string) => {
+  const result = str.match(regex);
+  if (result) {
+    return result[0];
   }
-  return output;
+  return "";
 };
+
+const resolveConditional = (shard: string, data: any) => {
+  if (!conditionalShard.test(shard)) {
+    return shard;
+  }
+  const condition = getMatch(matchCondition, shard);
+  const result = getMatch(matchResult, shard);
+  const conditionParts = condition.split(" ");
+  if (conditionParts.length === 1) {
+    return !!data[condition] ? result : "";
+  }
+  if (conditionParts.length === 3) {
+    const [propertyA, operator, propertyB] = conditionParts;
+    const valueA = data[propertyA];
+    const valueB = data[propertyB];
+    switch (operator) {
+      case "<":
+        return valueA < valueB ? result : "";
+      case ">":
+        return valueA > valueB ? result : "";
+      case "<=":
+        return valueA <= valueB ? result : "";
+      case ">=":
+        return valueA >= valueB ? result : "";
+      case "=":
+        return valueA === valueB ? result : "";
+      case "!=":
+        return valueA !== valueB ? result : "";
+      default:
+        return "";
+    }
+  }
+  return "";
+};
+
+const resolveTemplate = (template: string, data: any): string => {
+  const shards = consolidateShards(fragmentTemplate(template));
+  const resolvedConditionals = shards.map((shard) => resolveConditional(shard, data));
+  return resolvedConditionals.join("");
+};
+
+const data = {
+  showName: true,
+  showHobby: true,
+  age: 25,
+  limit: 25,
+};
+const resolvedTemplate = resolveTemplate(html.replace(/[\r\n]/g, ""), data);
+
+FS.writeFileSync("resolvedTemplate.html", resolvedTemplate);
+
+
