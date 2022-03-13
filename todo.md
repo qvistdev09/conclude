@@ -6,3 +6,4 @@
 * template class that imports and cleans templates only once
 * nested value getter
 * !falsy-check in if-statement
+* write tests
