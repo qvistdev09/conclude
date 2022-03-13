@@ -63,8 +63,8 @@ const resolveFloorLevelShard = (shard: string, data: any): string => {
 };
 
 const conditionalShard = /^\[:#IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/;
-const matchCondition = /(?<=\()[^\(\)]+(?=\))/;
-const matchResult = /(?<={)(.|[\n\s\r])+(?=}(?!}))/;
+const parenthesesContent = /(?<=\()[^\(\)]+(?=\))/;
+const bracesContent = /(?<={)(.|[\n\s\r])+(?=}(?!}))/;
 
 const getMatch = (regex: RegExp, str: string) => {
   const result = str.match(regex);
@@ -78,8 +78,8 @@ const resolveConditional = (shard: string, data: any) => {
   if (!conditionalShard.test(shard)) {
     return shard;
   }
-  const condition = getMatch(matchCondition, shard);
-  const result = getMatch(matchResult, shard);
+  const condition = getMatch(parenthesesContent, shard);
+  const result = getMatch(bracesContent, shard);
   const conditionParts = condition.split(" ");
   if (conditionParts.length === 1) {
     return !!data[condition] ? result : "";
@@ -112,10 +112,37 @@ const removeLineBreaks = (template: string) => {
   return template.replace(/[\r\n]/g, "");
 };
 
+const forBlock = /^\[:#FOR\s\(.+\sIN\s.+\)\s{.+}:\]/;
+
+const resolveForBlock = (shard: string, data: any) => {
+  if (!forBlock.test(shard)) {
+    return shard;
+  }
+  const forSpecification = getMatch(parenthesesContent, shard);
+  const forItemBody = getMatch(bracesContent, shard);
+  const forSpecificationParts = forSpecification.split(" ");
+  if (forSpecificationParts.length !== 3) {
+    return "";
+  }
+  const [forItemVar, , forArrayVar] = forSpecificationParts;
+  const array = data[forArrayVar];
+  if (!array || !Array.isArray(array)) {
+    return "";
+  }
+  let output = "";
+  array.forEach((value, index) => {
+    const identifier = `${forItemVar}${index}`;
+    data[identifier] = value;
+    output += forItemBody.replace(new RegExp(forItemVar, "g"), identifier);
+  });
+  return output;
+};
+
 const resolveRecursively = (template: string, data: any) => {
   let output = "";
   const splitShard = splitTemplate(template)
     .map((shard) => resolveConditional(shard, data))
+    .map((shard) => resolveForBlock(shard, data))
     .filter((str) => str !== "");
   if (splitShard.length === 1) {
     output += resolveFloorLevelShard(splitShard[0], data);
@@ -137,19 +164,7 @@ const resolveTemplate = (template: string, data: any): string => {
 };
 
 const data = {
-  name: 'Peter',
-  hiddenName: 'Hinga',
-  hidden: true,
-  showName: true,
-  showHobby: true,
-  hobby: "cooking",
-  intoCooking: true,
-  intoSports: true,
-  intoJogging: true,
-  intoProgramming: false,
-  age: 25,
-  limit: 25,
+  books: ["Harry Potter", "Hunger Games", "Lord of the ring"],
 };
-
 
 FS.writeFileSync("resolvedTemplate.html", resolveTemplate(html, data));

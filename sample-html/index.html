@@ -7,15 +7,10 @@
     <title>Document</title>
   </head>
   <body>
-    [:#IF (showHobby) THEN {
-      [:#IF (intoCooking) THEN {
-        <p>I'm into cooking</p>
+    <ul>
+      [:#FOR (book IN books) {
+        <li>[:book:]</li>
       }:]
-      [:#IF (intoSports) THEN {
-        [:#IF (intoJogging) THEN {
-          <p>I'm into jogging</p>
-        }:]
-      }:]
-    }:]
+    </ul>
   </body>
 </html>
