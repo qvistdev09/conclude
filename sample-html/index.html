@@ -8,8 +8,15 @@
   </head>
   <body>
     <ul>
-      [:#FOR (book IN books) {
-        <li>[:book:]</li>
+      [:#IF (renderBooks) THEN {
+        [:#FOR (book IN books) {
+          [:#IF (withNumbers) THEN {
+            <li>[:book:][:#FOR (siffra IN nested) {<span>[:siffra:]</span>}:]</li>
+          }:]
+          [:#IF (withoutNumbers) THEN {
+            <li>[:book:]</li>
+          }:]
+        }:]
       }:]
     </ul>
   </body>

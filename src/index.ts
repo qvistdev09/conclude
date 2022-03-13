@@ -164,7 +164,11 @@ const resolveTemplate = (template: string, data: any): string => {
 };
 
 const data = {
+  renderBooks: true,
   books: ["Harry Potter", "Hunger Games", "Lord of the ring"],
+  nested: ["ett", "två"],
+  withNumbers: false,
+  withoutNumbers: true,
 };
 
 FS.writeFileSync("resolvedTemplate.html", resolveTemplate(html, data));
