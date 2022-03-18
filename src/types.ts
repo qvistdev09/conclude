@@ -23,7 +23,7 @@ interface HtmlShard {
   content: string;
 }
 
-interface InterpolationShard {
+export interface InterpolationShard {
   type: "interpolation";
   content: string;
 }

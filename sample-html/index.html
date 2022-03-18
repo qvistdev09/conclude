@@ -22,6 +22,9 @@
     [:favoriteBook:]
     [:#FOR (book IN books) {
       <p>Book name [:book:]</p>
+      [:#FOR (person IN people) {
+        <span>[:person:][:#IF (hour = minute) THEN {<span>Nested if</span>}:]</span>
+      }:]
     }:]
   </body>
 </html>

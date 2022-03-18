@@ -1,7 +1,8 @@
 import FS from "fs";
 import path from "path";
-import { ForShard, IfWrapper, Shard } from "./types";
+import { ForShard, IfWrapper, InterpolationShard, Shard } from "./types";
 
+const spaces = /\s/g;
 const allBrackets = /\[:|:\]/g;
 const delimiters = /(\[:|:\])/g;
 const leftDelimiter = /\[:/g;
@@ -103,6 +104,13 @@ const appendShardToArray = (shard: Shard, shardArray: Shard[]): Shard[] => {
 
 const consolidateShards = (fragmentedTemplate: string[], consolidated: Shard[] = []): Shard[] => {
   const [fragment] = fragmentedTemplate;
+  if (!fragment) {
+    return [
+      {
+        type: "empty",
+      },
+    ];
+  }
   if (fragmentedTemplate.length === 1) {
     appendShardToArray(categorizeShard(fragment), consolidated);
     return consolidated;
@@ -154,10 +162,11 @@ const operatorCompare = (operator: string, valueA: any, valueB: any): boolean =>
   }
 };
 
-const resolveConditional = (ifWrapper: IfWrapper, data: any): string => {
+const resolveConditionalShard = (ifWrapper: IfWrapper, data: any): string => {
   for (const conditionalShard of ifWrapper.parts) {
     if (conditionalShard.type === "else") {
-      return conditionalShard.content;
+      const result = getMatch(extract.bracesContent, conditionalShard.content);
+      return result;
     }
     const condition = getMatch(extract.parenthesesContent, conditionalShard.content);
     const result = getMatch(extract.bracesContent, conditionalShard.content);
@@ -179,7 +188,7 @@ const resolveConditional = (ifWrapper: IfWrapper, data: any): string => {
   return "";
 };
 
-const resolveForBlock = (forShard: ForShard, data: any): string => {
+const resolveForShard = (forShard: ForShard, data: any): string => {
   const forSpecification = getMatch(extract.parenthesesContent, forShard.content);
   const forItemBody = getMatch(extract.bracesContent, forShard.content);
   const forSpecificationParts = forSpecification.split(" ");
@@ -200,24 +209,8 @@ const resolveForBlock = (forShard: ForShard, data: any): string => {
   return output;
 };
 
-const removeLineBreaks = (template: string) => {
-  return template.replace(/[\r\n]/g, "");
-};
-
-const cleanSpacesBetweenTags = (str: string) => {
-  return str.replace(/(?<=>)\s+(?=<)/g, "");
-};
-
-const cleanedHtml = cleanSpacesBetweenTags(removeLineBreaks(html));
-
-console.log("!!!! start");
-console.log(JSON.stringify(splitTemplate(cleanedHtml), null, 2));
-
-/* 
-const spaces = /\s/g;
-
-const interpolateShardData = (shard: string, data: any): string => {
-  const accessor = shard.replace(allBrackets, "").replace(spaces, "");
+const resolveInterpolationShard = (shard: InterpolationShard, data: any): string => {
+  const accessor = shard.content.replace(allBrackets, "").replace(spaces, "");
   const value = data[accessor];
   if (typeof value === "string") {
     return value;
@@ -228,56 +221,55 @@ const interpolateShardData = (shard: string, data: any): string => {
   return "";
 };
 
-const dataInterpolation = /^\[:.+:\]$/;
-
-const resolveFloorLevelShard = (shard: string, data: any): string => {
-  if (dataInterpolation.test(shard)) {
-    return interpolateShardData(shard, data);
+const resolveShard = (shard: Shard, data: any): string => {
+  if (shard.type === "html") {
+    return shard.content;
   }
-  return shard;
+  let output = "";
+  let newShards: Shard[] = [];
+  if (shard.type === "ifWrapper") {
+    newShards = splitTemplate(resolveConditionalShard(shard, data));
+  }
+  if (shard.type === "for") {
+    newShards = splitTemplate(resolveForShard(shard, data));
+  }
+  if (shard.type === "interpolation") {
+    newShards = splitTemplate(resolveInterpolationShard(shard, data));
+  }
+  newShards.forEach((newShard) => {
+    output += resolveShard(newShard, data);
+  });
+  return output;
 };
-
-const conditionalShard = /^\[:#IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/;
-const parenthesesContent = /(?<=\()[^\(\)]+(?=\))/;
-const bracesContent = /(?<={)(.|[\n\s\r])+(?=}(?!}))/;
 
 const removeLineBreaks = (template: string) => {
   return template.replace(/[\r\n]/g, "");
-};
-
-const forBlock = /^\[:#FOR\s\(.+\sIN\s.+\)\s{.+}:\]/;
-
-const resolveRecursively = (template: string, data: any) => {
-  let output = "";
-  const splitShard = splitTemplate(template)
-    .map((shard) => resolveConditional(shard, data))
-    .map((shard) => resolveForBlock(shard, data))
-    .filter((str) => str !== "");
-  if (splitShard.length === 1) {
-    output += resolveFloorLevelShard(splitShard[0], data);
-  } else {
-    splitShard.forEach((subShard) => {
-      output += resolveRecursively(subShard, data);
-    });
-  }
-  return output;
 };
 
 const cleanSpacesBetweenTags = (str: string) => {
   return str.replace(/(?<=>)\s+(?=<)/g, "");
 };
 
-const resolveTemplate = (template: string, data: any): string => {
-  const cleanedFromLineBreaks = removeLineBreaks(template);
-  return cleanSpacesBetweenTags(resolveRecursively(cleanedFromLineBreaks, data));
+const resolveRecursively = (template: string, data: any): string => {
+  let output = "";
+  const cleanedTemplate = cleanSpacesBetweenTags(removeLineBreaks(template));
+  const shards = splitTemplate(cleanedTemplate);
+  shards.forEach((shard) => {
+    output += resolveShard(shard, data);
+  });
+  return output;
 };
 
 const data = {
-  renderBooks: true,
-  books: ["Harry Potter", "Hunger Games", "Lord of the ring"],
-  nested: ["ett", "två"],
-  withNumbers: false,
-  withoutNumbers: true,
+  displayName: false,
+  displayHobby: false,
+  displayFood: false,
+  favoriteBook: "Harry Potter",
+  books: ["something", "test", "hey"],
+  people: ["oscar", "niklas", "malin"],
+  hour: 60,
+  minute: 60
 };
 
-FS.writeFileSync("resolvedTemplate.html", resolveTemplate(html, data)); */
+
+FS.writeFileSync("./public/index.html", cleanSpacesBetweenTags(resolveRecursively(html, data)));
