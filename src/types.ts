@@ -13,7 +13,7 @@ interface ElseShard {
   content: string;
 }
 
-interface ForShard {
+export interface ForShard {
   type: "for";
   content: string;
 }

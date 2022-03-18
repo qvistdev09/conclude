@@ -1,6 +1,6 @@
 import FS from "fs";
 import path from "path";
-import { IfWrapper, Shard } from "./types";
+import { ForShard, IfWrapper, Shard } from "./types";
 
 const allBrackets = /\[:|:\]/g;
 const delimiters = /(\[:|:\])/g;
@@ -179,6 +179,27 @@ const resolveConditional = (ifWrapper: IfWrapper, data: any): string => {
   return "";
 };
 
+const resolveForBlock = (forShard: ForShard, data: any): string => {
+  const forSpecification = getMatch(extract.parenthesesContent, forShard.content);
+  const forItemBody = getMatch(extract.bracesContent, forShard.content);
+  const forSpecificationParts = forSpecification.split(" ");
+  if (forSpecificationParts.length !== 3) {
+    return "";
+  }
+  const [forItemVar, , forArrayVar] = forSpecificationParts;
+  const array = data[forArrayVar];
+  if (!array || !Array.isArray(array)) {
+    return "";
+  }
+  let output = "";
+  array.forEach((value, index) => {
+    const identifier = `${forItemVar}${index}`;
+    data[identifier] = value;
+    output += forItemBody.replace(new RegExp(forItemVar, "g"), identifier);
+  });
+  return output;
+};
+
 const removeLineBreaks = (template: string) => {
   return template.replace(/[\r\n]/g, "");
 };
@@ -225,30 +246,6 @@ const removeLineBreaks = (template: string) => {
 };
 
 const forBlock = /^\[:#FOR\s\(.+\sIN\s.+\)\s{.+}:\]/;
-
-const resolveForBlock = (shard: string, data: any) => {
-  if (!forBlock.test(shard)) {
-    return shard;
-  }
-  const forSpecification = getMatch(parenthesesContent, shard);
-  const forItemBody = getMatch(bracesContent, shard);
-  const forSpecificationParts = forSpecification.split(" ");
-  if (forSpecificationParts.length !== 3) {
-    return "";
-  }
-  const [forItemVar, , forArrayVar] = forSpecificationParts;
-  const array = data[forArrayVar];
-  if (!array || !Array.isArray(array)) {
-    return "";
-  }
-  let output = "";
-  array.forEach((value, index) => {
-    const identifier = `${forItemVar}${index}`;
-    data[identifier] = value;
-    output += forItemBody.replace(new RegExp(forItemVar, "g"), identifier);
-  });
-  return output;
-};
 
 const resolveRecursively = (template: string, data: any) => {
   let output = "";
