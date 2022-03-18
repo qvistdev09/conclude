@@ -6,6 +6,13 @@ const delimiters = /(\[:|:\])/g;
 const leftDelimiter = /\[:/g;
 const rightDelimiter = /:\]/g;
 
+const shards = {
+  if: /^\[:#IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/,
+  elseIf: /^\[:#ELSE_IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/,
+  else: /^\[:#ELSE_IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/,
+  for: /^\[:#FOR\s\(.+\sIN\s.+\)\s{.+}:\]/,
+};
+
 const html = FS.readFileSync(path.resolve(__dirname, "../sample-html/index.html"), "utf-8");
 
 const fragmentTemplate = (template: string) => {
