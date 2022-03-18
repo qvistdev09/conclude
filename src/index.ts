@@ -10,9 +10,10 @@ const rightDelimiter = /:\]/g;
 const shards = {
   if: /^\[:#IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/,
   elseIf: /^\[:#ELSE_IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/,
-  else: /^\[:#ELSE_IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/,
-  for: /^\[:#FOR\s\(.+\sIN\s.+\)\s{.+}:\]/,
+  else: /^\[:#ELSE\s+{(.|[\n\s\r])+}:\]$/,
+  for: /^\[:#FOR\s\(.+\sIN\s.+\)\s{(.|[\n\s\r])+}:\]$/,
   interpolation: /^\[:(?!.*\[:).+(?<!:\].*):\]$/,
+  empty: /^\s*$/,
 };
 
 const html = FS.readFileSync(path.resolve(__dirname, "../sample-html/index.html"), "utf-8");
@@ -30,6 +31,7 @@ const categorizeShard = (str: string): Shard => {
     return {
       type: "if",
       parts: [str],
+      chainClosed: false,
     };
   }
   if (shards.elseIf.test(str)) {
@@ -56,35 +58,79 @@ const categorizeShard = (str: string): Shard => {
       content: str,
     };
   }
+  if (shards.empty.test(str)) {
+    return {
+      type: "empty",
+    };
+  }
   return {
     type: "html",
     content: str,
   };
 };
 
-const consolidateShards = (fragmentedTemplate: string[], consolidated: string[] = []): string[] => {
+const appendShardToArray = (shard: Shard, shardArray: Shard[]): Shard[] => {
+  const lastShard = shardArray.length > 0 ? shardArray[shardArray.length - 1] : null;
+  if (shard.type === "empty") {
+    return shardArray;
+  }
+  if (lastShard && lastShard.type === "if" && !lastShard.chainClosed) {
+    if (shard.type === "elseIf") {
+      lastShard.parts.push(shard.content);
+      return shardArray;
+    }
+    if (shard.type === "else") {
+      lastShard.parts.push(shard.content);
+      lastShard.chainClosed = true;
+      return shardArray;
+    }
+  }
+  if (shard.type !== "else" && shard.type !== "elseIf") {
+    shardArray.push(shard);
+  }
+  return shardArray;
+};
+
+const consolidateShards = (fragmentedTemplate: string[], consolidated: Shard[] = []): Shard[] => {
   const [fragment] = fragmentedTemplate;
   if (fragmentedTemplate.length === 1) {
-    consolidated.push(fragment);
+    appendShardToArray(categorizeShard(fragment), consolidated);
     return consolidated;
   }
-  if (!leftDelimiter.test(fragment) && !rightDelimiter.test(fragment)) {
-    consolidated.push(fragment);
+  if (balancedDelimiters(fragment)) {
+    appendShardToArray(categorizeShard(fragment), consolidated);
     return consolidateShards(fragmentedTemplate.slice(1), consolidated);
   }
-  if (balancedDelimiters(fragment)) {
-    consolidated.push(fragment);
+  if (!leftDelimiter.test(fragment) && !rightDelimiter.test(fragment)) {
+    consolidated.push({
+      type: "html",
+      content: fragment,
+    });
     return consolidateShards(fragmentedTemplate.slice(1), consolidated);
   }
   const joinedFragments = `${fragmentedTemplate[0]}${fragmentedTemplate[1]}`;
   return consolidateShards([joinedFragments, ...fragmentedTemplate.slice(2)], consolidated);
 };
 
-const splitTemplate = (template: string) => {
+const splitTemplate = (template: string): Shard[] => {
   const fragmented = fragmentTemplate(template);
   return consolidateShards(fragmented);
 };
 
+const removeLineBreaks = (template: string) => {
+  return template.replace(/[\r\n]/g, "");
+};
+
+const cleanSpacesBetweenTags = (str: string) => {
+  return str.replace(/(?<=>)\s+(?=<)/g, "");
+};
+
+const cleanedHtml = cleanSpacesBetweenTags(removeLineBreaks(html));
+
+console.log("!!!! start")
+console.log(JSON.stringify(splitTemplate(cleanedHtml), null, 2));
+
+/* 
 const spaces = /\s/g;
 
 const interpolateShardData = (shard: string, data: any): string => {
@@ -217,4 +263,4 @@ const data = {
   withoutNumbers: true,
 };
 
-FS.writeFileSync("resolvedTemplate.html", resolveTemplate(html, data));
+FS.writeFileSync("resolvedTemplate.html", resolveTemplate(html, data)); */

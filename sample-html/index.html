@@ -11,7 +11,16 @@
       <p>My name is Oscar</p>
     }:]
     [:#ELSE {
-      <p>The if-condition was false, not displaying name</p>
+      <p>The if-condition was false, not displaying anything</p>
+    }:]
+    [:#ELSE_IF (displayHobby) THEN {
+      <p>I like to program</p>
+    }:]
+    [:#ELSE_IF (displayFood) THEN {
+      <p>I like kimchi</p>
+    }:]
+    [:#ELSE {
+      <p>The if-condition was false, not displaying anything</p>
     }:]
   </body>
 </html>
