@@ -7,17 +7,11 @@
     <title>Document</title>
   </head>
   <body>
-    <ul>
-      [:#IF (renderBooks) THEN {
-        [:#FOR (book IN books) {
-          [:#IF (withNumbers) THEN {
-            <li>[:book:][:#FOR (siffra IN nested) {<span>[:siffra:]</span>}:]</li>
-          }:]
-          [:#IF (withoutNumbers) THEN {
-            <li>[:book:]</li>
-          }:]
-        }:]
-      }:]
-    </ul>
+    [:#IF (displayName) THEN {
+      <p>My name is Oscar</p>
+    }:]
+    [:#ELSE {
+      <p>The if-condition was false, not displaying name</p>
+    }:]
   </body>
 </html>
