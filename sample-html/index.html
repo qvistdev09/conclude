@@ -10,9 +10,6 @@
     [:#IF (displayName) THEN {
       <p>My name is Oscar</p>
     }:]
-    [:#ELSE {
-      <p>The if-condition was false, not displaying anything</p>
-    }:]
     [:#ELSE_IF (displayHobby) THEN {
       <p>I like to program</p>
     }:]
@@ -21,6 +18,10 @@
     }:]
     [:#ELSE {
       <p>The if-condition was false, not displaying anything</p>
+    }:]
+    [:favoriteBook:]
+    [:#FOR (book IN books) {
+      <p>Book name [:book:]</p>
     }:]
   </body>
 </html>
