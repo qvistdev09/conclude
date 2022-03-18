@@ -3,6 +3,16 @@ interface IfShard {
   parts: string[];
 }
 
+interface ElseIfShard {
+  type: "elseIf";
+  content: string;
+}
+
+interface ElseShard {
+  type: "else";
+  content: string;
+}
+
 interface ForShard {
   type: "for";
   content: string;
@@ -18,4 +28,4 @@ interface InterpolationShard {
   content: string;
 }
 
-export type Shard = IfShard | ForShard | HtmlShard | InterpolationShard;
+export type Shard = IfShard | ElseIfShard | ElseShard | ForShard | HtmlShard | InterpolationShard;

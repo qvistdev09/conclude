@@ -1,5 +1,6 @@
 import FS from "fs";
 import path from "path";
+import { Shard } from "./types";
 
 const allBrackets = /\[:|:\]/g;
 const delimiters = /(\[:|:\])/g;
@@ -11,6 +12,7 @@ const shards = {
   elseIf: /^\[:#ELSE_IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/,
   else: /^\[:#ELSE_IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/,
   for: /^\[:#FOR\s\(.+\sIN\s.+\)\s{.+}:\]/,
+  interpolation: /^\[:(?!.*\[:).+(?<!:\].*):\]$/,
 };
 
 const html = FS.readFileSync(path.resolve(__dirname, "../sample-html/index.html"), "utf-8");
@@ -21,6 +23,43 @@ const fragmentTemplate = (template: string) => {
 
 const balancedDelimiters = (str: string) => {
   return str.match(leftDelimiter)?.length === str.match(rightDelimiter)?.length;
+};
+
+const categorizeShard = (str: string): Shard => {
+  if (shards.if.test(str)) {
+    return {
+      type: "if",
+      parts: [str],
+    };
+  }
+  if (shards.elseIf.test(str)) {
+    return {
+      type: "elseIf",
+      content: str,
+    };
+  }
+  if (shards.else.test(str)) {
+    return {
+      type: "else",
+      content: str,
+    };
+  }
+  if (shards.for.test(str)) {
+    return {
+      type: "for",
+      content: str,
+    };
+  }
+  if (shards.interpolation.test(str)) {
+    return {
+      type: "interpolation",
+      content: str,
+    };
+  }
+  return {
+    type: "html",
+    content: str,
+  };
 };
 
 const consolidateShards = (fragmentedTemplate: string[], consolidated: string[] = []): string[] => {
