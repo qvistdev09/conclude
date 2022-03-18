@@ -1,7 +1,6 @@
 interface IfShard {
   type: "if";
-  parts: string[];
-  chainClosed: boolean;
+  content: string;
 }
 
 interface ElseIfShard {
@@ -33,6 +32,12 @@ interface EmptyShard {
   type: "empty";
 }
 
+export interface IfWrapper {
+  type: "ifWrapper";
+  parts: Array<IfShard | ElseIfShard | ElseShard>;
+  chainClosed: boolean;
+}
+
 export type Shard =
   | IfShard
   | ElseIfShard
@@ -40,4 +45,5 @@ export type Shard =
   | ForShard
   | HtmlShard
   | InterpolationShard
-  | EmptyShard;
+  | EmptyShard
+  | IfWrapper;

@@ -1,6 +1,6 @@
 import FS from "fs";
 import path from "path";
-import { Shard } from "./types";
+import { IfWrapper, Shard } from "./types";
 
 const allBrackets = /\[:|:\]/g;
 const delimiters = /(\[:|:\])/g;
@@ -16,6 +16,11 @@ const shards = {
   empty: /^\s*$/,
 };
 
+const extract = {
+  parenthesesContent: /(?<=\()[^\(\)]+(?=\))/,
+  bracesContent: /(?<={)(.|[\n\s\r])+(?=}(?!}))/,
+};
+
 const html = FS.readFileSync(path.resolve(__dirname, "../sample-html/index.html"), "utf-8");
 
 const fragmentTemplate = (template: string) => {
@@ -29,8 +34,13 @@ const balancedDelimiters = (str: string) => {
 const categorizeShard = (str: string): Shard => {
   if (shards.if.test(str)) {
     return {
-      type: "if",
-      parts: [str],
+      type: "ifWrapper",
+      parts: [
+        {
+          type: "if",
+          content: str,
+        },
+      ],
       chainClosed: false,
     };
   }
@@ -74,13 +84,13 @@ const appendShardToArray = (shard: Shard, shardArray: Shard[]): Shard[] => {
     return shardArray;
   }
   const lastShard = shardArray.length > 0 ? shardArray[shardArray.length - 1] : null;
-  if (lastShard && lastShard.type === "if" && !lastShard.chainClosed) {
+  if (lastShard && lastShard.type === "ifWrapper" && !lastShard.chainClosed) {
     if (shard.type === "elseIf") {
-      lastShard.parts.push(shard.content);
+      lastShard.parts.push(shard);
       return shardArray;
     }
     if (shard.type === "else") {
-      lastShard.parts.push(shard.content);
+      lastShard.parts.push(shard);
       lastShard.chainClosed = true;
       return shardArray;
     }
@@ -115,6 +125,58 @@ const consolidateShards = (fragmentedTemplate: string[], consolidated: Shard[] =
 const splitTemplate = (template: string): Shard[] => {
   const fragmented = fragmentTemplate(template);
   return consolidateShards(fragmented);
+};
+
+const getMatch = (regex: RegExp, str: string) => {
+  const result = str.match(regex);
+  if (result) {
+    return result[0];
+  }
+  return "";
+};
+
+const operatorCompare = (operator: string, valueA: any, valueB: any): boolean => {
+  switch (operator) {
+    case "<":
+      return valueA < valueB;
+    case ">":
+      return valueA > valueB;
+    case "<=":
+      return valueA <= valueB;
+    case ">=":
+      return valueA >= valueB;
+    case "=":
+      return valueA === valueB;
+    case "!=":
+      return valueA !== valueB;
+    default:
+      return false;
+  }
+};
+
+const resolveConditional = (ifWrapper: IfWrapper, data: any): string => {
+  for (const conditionalShard of ifWrapper.parts) {
+    if (conditionalShard.type === "else") {
+      return conditionalShard.content;
+    }
+    const condition = getMatch(extract.parenthesesContent, conditionalShard.content);
+    const result = getMatch(extract.bracesContent, conditionalShard.content);
+    const conditionParts = condition.split(" ");
+
+    if (conditionParts.length === 1 && !!data[condition]) {
+      return result;
+    }
+
+    if (conditionParts.length === 3) {
+      const [propertyA, operator, propertyB] = conditionParts;
+      const valueA = data[propertyA];
+      const valueB = data[propertyB];
+      if (operatorCompare(operator, valueA, valueB)) {
+        return result;
+      }
+    }
+  }
+  return "";
 };
 
 const removeLineBreaks = (template: string) => {
@@ -157,48 +219,6 @@ const resolveFloorLevelShard = (shard: string, data: any): string => {
 const conditionalShard = /^\[:#IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/;
 const parenthesesContent = /(?<=\()[^\(\)]+(?=\))/;
 const bracesContent = /(?<={)(.|[\n\s\r])+(?=}(?!}))/;
-
-const getMatch = (regex: RegExp, str: string) => {
-  const result = str.match(regex);
-  if (result) {
-    return result[0];
-  }
-  return "";
-};
-
-const resolveConditional = (shard: string, data: any) => {
-  if (!conditionalShard.test(shard)) {
-    return shard;
-  }
-  const condition = getMatch(parenthesesContent, shard);
-  const result = getMatch(bracesContent, shard);
-  const conditionParts = condition.split(" ");
-  if (conditionParts.length === 1) {
-    return !!data[condition] ? result : "";
-  }
-  if (conditionParts.length === 3) {
-    const [propertyA, operator, propertyB] = conditionParts;
-    const valueA = data[propertyA];
-    const valueB = data[propertyB];
-    switch (operator) {
-      case "<":
-        return valueA < valueB ? result : "";
-      case ">":
-        return valueA > valueB ? result : "";
-      case "<=":
-        return valueA <= valueB ? result : "";
-      case ">=":
-        return valueA >= valueB ? result : "";
-      case "=":
-        return valueA === valueB ? result : "";
-      case "!=":
-        return valueA !== valueB ? result : "";
-      default:
-        return "";
-    }
-  }
-  return "";
-};
 
 const removeLineBreaks = (template: string) => {
   return template.replace(/[\r\n]/g, "");
