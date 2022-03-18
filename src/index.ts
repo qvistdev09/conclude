@@ -70,10 +70,10 @@ const categorizeShard = (str: string): Shard => {
 };
 
 const appendShardToArray = (shard: Shard, shardArray: Shard[]): Shard[] => {
-  const lastShard = shardArray.length > 0 ? shardArray[shardArray.length - 1] : null;
   if (shard.type === "empty") {
     return shardArray;
   }
+  const lastShard = shardArray.length > 0 ? shardArray[shardArray.length - 1] : null;
   if (lastShard && lastShard.type === "if" && !lastShard.chainClosed) {
     if (shard.type === "elseIf") {
       lastShard.parts.push(shard.content);
@@ -127,7 +127,7 @@ const cleanSpacesBetweenTags = (str: string) => {
 
 const cleanedHtml = cleanSpacesBetweenTags(removeLineBreaks(html));
 
-console.log("!!!! start")
+console.log("!!!! start");
 console.log(JSON.stringify(splitTemplate(cleanedHtml), null, 2));
 
 /* 
