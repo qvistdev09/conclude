@@ -1,16 +1,12 @@
-interface IfShard {
+export interface IfShardChainElement {
+  type: "if" | "else" | "elseIf";
+  content: string;
+}
+
+export interface IfShard {
   type: "if";
-  content: string;
-}
-
-interface ElseIfShard {
-  type: "elseIf";
-  content: string;
-}
-
-interface ElseShard {
-  type: "else";
-  content: string;
+  chain: IfShardChainElement[];
+  chainClosed: boolean;
 }
 
 export interface ForShard {
@@ -18,7 +14,7 @@ export interface ForShard {
   content: string;
 }
 
-interface HtmlShard {
+export interface HtmlShard {
   type: "html";
   content: string;
 }
@@ -28,22 +24,4 @@ export interface InterpolationShard {
   content: string;
 }
 
-interface EmptyShard {
-  type: "empty";
-}
-
-export interface IfWrapper {
-  type: "ifWrapper";
-  parts: Array<IfShard | ElseIfShard | ElseShard>;
-  chainClosed: boolean;
-}
-
-export type Shard =
-  | IfShard
-  | ElseIfShard
-  | ElseShard
-  | ForShard
-  | HtmlShard
-  | InterpolationShard
-  | EmptyShard
-  | IfWrapper;
+export type Shard = IfShard | ForShard | HtmlShard | InterpolationShard;

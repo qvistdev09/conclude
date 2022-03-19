@@ -1,4 +1,5 @@
-import { ForShard, IfWrapper, InterpolationShard, Shard } from "./types";
+import { ForShard, IfShard, InterpolationShard, Shard } from "./types";
+import shardCreators from "./shardCreators";
 
 const spaces = /\s/g;
 const allBrackets = /\[:|:\]/g;
@@ -28,98 +29,48 @@ const balancedDelimiters = (str: string) => {
   return str.match(leftDelimiter)?.length === str.match(rightDelimiter)?.length;
 };
 
-const categorizeShard = (str: string): Shard => {
-  if (shards.if.test(str)) {
-    return {
-      type: "ifWrapper",
-      parts: [
-        {
-          type: "if",
-          content: str,
-        },
-      ],
-      chainClosed: false,
-    };
+const createAndAppendShard = (input: string, shardArray: Shard[]): void => {
+  if (shards.empty.test(input)) {
+    return;
   }
-  if (shards.elseIf.test(str)) {
-    return {
-      type: "elseIf",
-      content: str,
-    };
+  if (shards.if.test(input)) {
+    shardCreators.appendIfShard(input, shardArray);
+    return;
   }
-  if (shards.else.test(str)) {
-    return {
-      type: "else",
-      content: str,
-    };
+  if (shards.elseIf.test(input)) {
+    shardCreators.appendElseShard(input, "elseIf", shardArray);
+    return;
   }
-  if (shards.for.test(str)) {
-    return {
-      type: "for",
-      content: str,
-    };
+  if (shards.else.test(input)) {
+    shardCreators.appendElseShard(input, "else", shardArray);
+    return;
   }
-  if (shards.interpolation.test(str)) {
-    return {
-      type: "interpolation",
-      content: str,
-    };
+  if (shards.for.test(input)) {
+    shardCreators.appendForShard(input, shardArray);
+    return;
   }
-  if (shards.empty.test(str)) {
-    return {
-      type: "empty",
-    };
+  if (shards.interpolation.test(input)) {
+    shardCreators.appendInterpolationShard(input, shardArray);
+    return;
   }
-  return {
-    type: "html",
-    content: str,
-  };
-};
-
-const appendShardToArray = (shard: Shard, shardArray: Shard[]): Shard[] => {
-  if (shard.type === "empty") {
-    return shardArray;
-  }
-  const lastShard = shardArray.length > 0 ? shardArray[shardArray.length - 1] : null;
-  if (lastShard && lastShard.type === "ifWrapper" && !lastShard.chainClosed) {
-    if (shard.type === "elseIf") {
-      lastShard.parts.push(shard);
-      return shardArray;
-    }
-    if (shard.type === "else") {
-      lastShard.parts.push(shard);
-      lastShard.chainClosed = true;
-      return shardArray;
-    }
-  }
-  if (shard.type !== "else" && shard.type !== "elseIf") {
-    shardArray.push(shard);
-  }
-  return shardArray;
+  shardCreators.appendHtmlShard(input, shardArray);
 };
 
 const consolidateShards = (fragmentedTemplate: string[], consolidated: Shard[] = []): Shard[] => {
-  const [fragment] = fragmentedTemplate;
-  if (!fragment) {
-    return [
-      {
-        type: "empty",
-      },
-    ];
+  if (fragmentedTemplate.length === 0) {
+    return consolidated;
   }
+  const [fragment] = fragmentedTemplate;
   if (fragmentedTemplate.length === 1) {
-    appendShardToArray(categorizeShard(fragment), consolidated);
+    createAndAppendShard(fragment, consolidated);
     return consolidated;
   }
   if (balancedDelimiters(fragment)) {
-    appendShardToArray(categorizeShard(fragment), consolidated);
+    createAndAppendShard(fragment, consolidated);
     return consolidateShards(fragmentedTemplate.slice(1), consolidated);
   }
   if (!leftDelimiter.test(fragment) && !rightDelimiter.test(fragment)) {
-    consolidated.push({
-      type: "html",
-      content: fragment,
-    });
+    shardCreators.appendHtmlShard(fragment, consolidated);
     return consolidateShards(fragmentedTemplate.slice(1), consolidated);
   }
   const joinedFragments = `${fragmentedTemplate[0]}${fragmentedTemplate[1]}`;
@@ -158,14 +109,14 @@ const operatorCompare = (operator: string, valueA: any, valueB: any): boolean =>
   }
 };
 
-const resolveConditionalShard = (ifWrapper: IfWrapper, data: any): string => {
-  for (const conditionalShard of ifWrapper.parts) {
-    if (conditionalShard.type === "else") {
-      const result = getMatch(extract.bracesContent, conditionalShard.content);
+const resolveConditionalShard = (ifShard: IfShard, data: any): string => {
+  for (const chainElement of ifShard.chain) {
+    if (chainElement.type === "else") {
+      const result = getMatch(extract.bracesContent, chainElement.content);
       return result;
     }
-    const condition = getMatch(extract.parenthesesContent, conditionalShard.content);
-    const result = getMatch(extract.bracesContent, conditionalShard.content);
+    const condition = getMatch(extract.parenthesesContent, chainElement.content);
+    const result = getMatch(extract.bracesContent, chainElement.content);
     const conditionParts = condition.split(" ");
 
     if (conditionParts.length === 1 && !!data[condition]) {
@@ -223,7 +174,7 @@ const resolveShard = (shard: Shard, data: any): string => {
   }
   let output = "";
   let newShards: Shard[] = [];
-  if (shard.type === "ifWrapper") {
+  if (shard.type === "if") {
     newShards = splitTemplate(resolveConditionalShard(shard, data));
   }
   if (shard.type === "for") {
