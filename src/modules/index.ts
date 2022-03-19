@@ -248,10 +248,9 @@ const cleanSpacesBetweenTags = (str: string) => {
 
 export const resolveRecursively = (template: string, data: any): string => {
   let output = "";
-  const cleanedTemplate = cleanSpacesBetweenTags(removeLineBreaks(template));
-  const shards = splitTemplate(cleanedTemplate);
+  const shards = splitTemplate(removeLineBreaks(template));
   shards.forEach((shard) => {
     output += resolveShard(shard, data);
   });
-  return output;
+  return cleanSpacesBetweenTags(output);
 };
