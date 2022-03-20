@@ -1,6 +1,5 @@
 import shardCreators from "./shardCreators";
 import { WrappedShard } from "./types";
-import clean from "./clean";
 
 const delimiters = /(\[:|:\])/g;
 const leftDelimiter = /\[:/g;
@@ -90,15 +89,5 @@ const resolveShard = (wrappedShard: WrappedShard, data: any): string => {
   );
 };
 
-const removeLineBreaks = (template: string) => {
-  return template.replace(/[\r\n]/g, "");
-};
-
-export const resolveRecursively = (template: string, data: any): string => {
-  let output = "";
-  const shards = splitTemplate(removeLineBreaks(template));
-  shards.forEach((shard) => {
-    output += resolveShard(shard, data);
-  });
-  return clean.cleanOutput(output);
-};
+export const resolveRecursively = (template: string, data: any): string =>
+  splitTemplate(template).reduce((output, shard) => (output += resolveShard(shard, data)), "");
