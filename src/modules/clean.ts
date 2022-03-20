@@ -3,6 +3,7 @@ const lineBreaks = /[\r\n]/g;
 const bracesSpace = /(?<={)\s*|\s*(?=})/g;
 const parenthesesSpace = /(?<=\()\s*|\s*(?=\))/g;
 const angleBracketsSpace = /(?<=>)\s*|\s*(?=<)/g;
+const spacesBetweenDelimiters = /(?<=:\])\s*|\s*(?=\[:)/g;
 
 const cleanOutput = (template: string): string => {
   return template
@@ -10,7 +11,8 @@ const cleanOutput = (template: string): string => {
     .replace(lineBreaks, "")
     .replace(bracesSpace, "")
     .replace(parenthesesSpace, "")
-    .replace(angleBracketsSpace, "");
+    .replace(angleBracketsSpace, "")
+    .replace(spacesBetweenDelimiters, "");
 };
 
 export default {

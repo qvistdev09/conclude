@@ -56,3 +56,7 @@ export type WrappedShard =
       resolveAble: false;
       shard: HtmlShard;
     };
+
+export interface TemplatesStore {
+  [key: string]: string;
+}
