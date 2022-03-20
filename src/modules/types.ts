@@ -1,7 +1,27 @@
-export interface IfShardChainElement {
-  type: "if" | "else" | "elseIf";
-  content: string;
+export interface TruthinessConditional {
+  type: "truthinessCheck";
+  inverted: boolean;
+  variableName: string;
+  result: string;
 }
+
+export interface ComparisonConditional {
+  type: "comparison";
+  leftHandVariable: string;
+  rightHandVariable: string;
+  operator: string;
+  result: string;
+}
+
+export type IfShardChainElement =
+  | {
+      type: "if" | "elseIf";
+      condition: TruthinessConditional | ComparisonConditional;
+    }
+  | {
+      type: "else";
+      result: string;
+    };
 
 export interface IfShard {
   type: "if";
@@ -11,7 +31,14 @@ export interface IfShard {
 
 export interface ForShard {
   type: "for";
-  content: string;
+  itemName: string;
+  arrayName: string;
+  forBody: string;
+}
+
+export interface InterpolationShard {
+  type: "interpolation";
+  variableName: string;
 }
 
 export interface HtmlShard {
@@ -19,9 +46,13 @@ export interface HtmlShard {
   content: string;
 }
 
-export interface InterpolationShard {
-  type: "interpolation";
-  content: string;
-}
-
-export type Shard = IfShard | ForShard | HtmlShard | InterpolationShard;
+export type WrappedShard =
+  | {
+      resolveAble: true;
+      shard: IfShard | ForShard | InterpolationShard;
+      resolve: (data: any) => string;
+    }
+  | {
+      resolveAble: false;
+      shard: HtmlShard;
+    };
