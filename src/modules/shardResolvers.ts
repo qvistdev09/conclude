@@ -48,13 +48,12 @@ const resolveForShard = (forShard: ForShard, data: any): string => {
   if (!array || !Array.isArray(array)) {
     return "";
   }
-  let output = "";
-  array.forEach((value, index) => {
+  return array.reduce((output: string, value, index) => {
     const identifier = `${forShard.itemName}${index}`;
     data[identifier] = value;
     output += forShard.forBody.replace(new RegExp(forShard.itemName, "g"), identifier);
-  });
-  return output;
+    return output;
+  }, "");
 };
 
 const resolveInterpolationShard = (shard: InterpolationShard, data: any): string => {
