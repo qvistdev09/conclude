@@ -19,20 +19,17 @@ export const resolveTemplateIncludes = (
     return template;
   }
   const branchedHistory = [...history];
-  let resolvedTemplate = template;
-  includeBlocks.forEach((block) => {
-    const templateKey = getRegexMatch(extractIncludeKey, block);
+  const resolvedTemplate = includeBlocks.reduce((templateBody, includeBlock) => {
+    const templateKey = getRegexMatch(extractIncludeKey, includeBlock);
     if (templateKey) {
       const circularImport = branchedHistory.includes(templateKey);
       const replaceContent = circularImport ? "" : templatesMap[templateKey];
       if (!circularImport) {
         branchedHistory.push(templateKey);
       }
-      resolvedTemplate = resolvedTemplate.replace(
-        createIncludeBlockRegex(templateKey),
-        replaceContent
-      );
+      return templateBody.replace(createIncludeBlockRegex(templateKey), replaceContent);
     }
-  });
+    return templateBody;
+  }, template);
   return resolveTemplateIncludes(resolvedTemplate, templatesMap, branchedHistory);
 };
