@@ -5,7 +5,7 @@ const includeBlocksRegex = /\[:#INCLUDE\s"[^\[\]]*":\]/g;
 const extractIncludeKey = /(?<=").+(?=")/;
 
 const createIncludeBlockRegex = (key: string): RegExp =>
-  new RegExp('[\\[]:#INCLUDE\\s"' + key + '":[\\]]', 'g');
+  new RegExp('[\\[]:#INCLUDE\\s"' + key + '":[\\]]', "g");
 
 export const resolveTemplateIncludes = (
   template: string,
@@ -28,7 +28,6 @@ export const resolveTemplateIncludes = (
       if (!circularImport) {
         branchedHistory.push(templateKey);
       }
-      console.log(createIncludeBlockRegex(templateKey))
       resolvedTemplate = resolvedTemplate.replace(
         createIncludeBlockRegex(templateKey),
         replaceContent
