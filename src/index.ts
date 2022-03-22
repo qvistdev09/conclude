@@ -1,4 +1,4 @@
-import { resolveRecursively } from "./modules";
+import { resolveRecursively } from "./modules/main";
 import { createStore } from "./modules/store";
 import { resolveTemplateIncludes } from "./modules/include";
 
