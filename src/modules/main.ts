@@ -1,5 +1,11 @@
-import shardCreators from "./shardCreators";
-import { WrappedShard } from "./types";
+import {
+  appendElseBlock,
+  appendForBlock,
+  appendHtmlBlock,
+  appendIfBlock,
+  appendInterpolationBlock,
+} from "./block-creators";
+import { Blocks } from "./types";
 
 const delimiters = /(\[:|:\])/g;
 const leftDelimiter = /\[:/g;
@@ -22,72 +28,72 @@ const balancedDelimiters = (str: string) => {
   return str.match(leftDelimiter)?.length === str.match(rightDelimiter)?.length;
 };
 
-const createAndAppendShard = (input: string, shardArray: WrappedShard[]): void => {
+const createAndAppendBlock = (input: string, blocks: Blocks.Wrapped[]): void => {
   if (shards.empty.test(input)) {
     return;
   }
   if (shards.if.test(input)) {
-    shardCreators.appendIfShard(input, shardArray);
+    appendIfBlock(input, blocks);
     return;
   }
   if (shards.elseIf.test(input)) {
-    shardCreators.appendElseShard(input, "elseIf", shardArray);
+    appendElseBlock(input, "elseIf", blocks);
     return;
   }
   if (shards.else.test(input)) {
-    shardCreators.appendElseShard(input, "else", shardArray);
+    appendElseBlock(input, "else", blocks);
     return;
   }
   if (shards.for.test(input)) {
-    shardCreators.appendForShard(input, shardArray);
+    appendForBlock(input, blocks);
     return;
   }
   if (shards.interpolation.test(input)) {
-    shardCreators.appendInterpolationShard(input, shardArray);
+    appendInterpolationBlock(input, blocks);
     return;
   }
-  shardCreators.appendHtmlShard(input, shardArray);
+  appendHtmlBlock(input, blocks);
 };
 
-const consolidateShards = (
+const consolidateFragments = (
   fragmentedTemplate: string[],
-  consolidated: WrappedShard[] = []
-): WrappedShard[] => {
+  blocks: Blocks.Wrapped[] = []
+): Blocks.Wrapped[] => {
   if (fragmentedTemplate.length === 0) {
-    return consolidated;
+    return blocks;
   }
   const [fragment] = fragmentedTemplate;
   if (fragmentedTemplate.length === 1) {
-    createAndAppendShard(fragment, consolidated);
-    return consolidated;
+    createAndAppendBlock(fragment, blocks);
+    return blocks;
   }
   if (balancedDelimiters(fragment)) {
-    createAndAppendShard(fragment, consolidated);
-    return consolidateShards(fragmentedTemplate.slice(1), consolidated);
+    createAndAppendBlock(fragment, blocks);
+    return consolidateFragments(fragmentedTemplate.slice(1), blocks);
   }
   if (!leftDelimiter.test(fragment) && !rightDelimiter.test(fragment)) {
-    shardCreators.appendHtmlShard(fragment, consolidated);
-    return consolidateShards(fragmentedTemplate.slice(1), consolidated);
+    appendHtmlBlock(fragment, blocks);
+    return consolidateFragments(fragmentedTemplate.slice(1), blocks);
   }
   const joinedFragments = `${fragmentedTemplate[0]}${fragmentedTemplate[1]}`;
-  return consolidateShards([joinedFragments, ...fragmentedTemplate.slice(2)], consolidated);
+  return consolidateFragments([joinedFragments, ...fragmentedTemplate.slice(2)], blocks);
 };
 
-const splitTemplate = (template: string): WrappedShard[] => {
+const parseTemplate = (template: string): Blocks.Wrapped[] => {
   const fragmented = fragmentTemplate(template);
-  return consolidateShards(fragmented);
+  return consolidateFragments(fragmented);
 };
 
-const resolveShard = (wrappedShard: WrappedShard, data: any): string => {
-  if (!wrappedShard.resolveAble) {
-    return wrappedShard.shard.content;
+const resolveBlock = (block: Blocks.Wrapped, data: any): string => {
+  if (!block.resolveAble) {
+    return block.shard.content;
   }
-  const resolvedShard = wrappedShard.resolve(data);
-  return splitTemplate(resolvedShard).reduce(
-    (output, currentShard) => (output += resolveShard(currentShard, data)),
+  const resolvedShard = block.resolve(data);
+  return parseTemplate(resolvedShard).reduce(
+    (output, currentBlock) => (output += resolveBlock(currentBlock, data)),
     ""
   );
 };
 
 export const resolveRecursively = (template: string, data: any): string =>
-  splitTemplate(template).reduce((output, shard) => (output += resolveShard(shard, data)), "");
+  parseTemplate(template).reduce((output, block) => (output += resolveBlock(block, data)), "");

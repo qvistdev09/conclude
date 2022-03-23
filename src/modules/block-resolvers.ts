@@ -1,4 +1,4 @@
-import { ForShard, IfShard, InterpolationShard } from "./types";
+import { Blocks } from "./types";
 
 const operatorCompare = (operator: string, valueA: any, valueB: any): boolean => {
   switch (operator) {
@@ -19,8 +19,8 @@ const operatorCompare = (operator: string, valueA: any, valueB: any): boolean =>
   }
 };
 
-const resolveIfShard = (ifShard: IfShard, data: any): string => {
-  for (const chainElement of ifShard.chain) {
+export const resolveIfBlock = (ifBlock: Blocks.If, data: any): string => {
+  for (const chainElement of ifBlock.chain) {
     if (chainElement.type === "else") {
       return chainElement.result;
     }
@@ -43,21 +43,24 @@ const resolveIfShard = (ifShard: IfShard, data: any): string => {
   return "";
 };
 
-const resolveForShard = (forShard: ForShard, data: any): string => {
-  const array = data[forShard.arrayName];
+export const resolveForBlock = (forBlock: Blocks.For, data: any): string => {
+  const array = data[forBlock.arrayName];
   if (!array || !Array.isArray(array)) {
     return "";
   }
   return array.reduce((output: string, value, index) => {
-    const identifier = `${forShard.itemName}${index}`;
+    const identifier = `${forBlock.itemName}${index}`;
     data[identifier] = value;
-    output += forShard.forBody.replace(new RegExp(forShard.itemName, "g"), identifier);
+    output += forBlock.forBody.replace(new RegExp(forBlock.itemName, "g"), identifier);
     return output;
   }, "");
 };
 
-const resolveInterpolationShard = (shard: InterpolationShard, data: any): string => {
-  const value = data[shard.variableName];
+export const resolveInterpolationBlock = (
+  interpolationBlock: Blocks.Interpolation,
+  data: any
+): string => {
+  const value = data[interpolationBlock.variableName];
   if (typeof value === "string") {
     return value;
   }
@@ -65,10 +68,4 @@ const resolveInterpolationShard = (shard: InterpolationShard, data: any): string
     return value.toString();
   }
   return "";
-};
-
-export default {
-  resolveIfShard,
-  resolveForShard,
-  resolveInterpolationShard,
 };
