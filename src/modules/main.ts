@@ -5,7 +5,7 @@ import {
   appendIfBlock,
   appendInterpolationBlock,
 } from "./block-creators";
-import { Block } from "./types";
+import { Blocks } from "./types";
 
 const delimiters = /(\[:|:\])/g;
 const leftDelimiter = /\[:/g;
@@ -28,7 +28,7 @@ const balancedDelimiters = (str: string) => {
   return str.match(leftDelimiter)?.length === str.match(rightDelimiter)?.length;
 };
 
-const createAndAppendBlock = (input: string, blocks: Block.Wrapped[]): void => {
+const createAndAppendBlock = (input: string, blocks: Blocks.Wrapped[]): void => {
   if (shards.empty.test(input)) {
     return;
   }
@@ -57,8 +57,8 @@ const createAndAppendBlock = (input: string, blocks: Block.Wrapped[]): void => {
 
 const consolidateFragments = (
   fragmentedTemplate: string[],
-  blocks: Block.Wrapped[] = []
-): Block.Wrapped[] => {
+  blocks: Blocks.Wrapped[] = []
+): Blocks.Wrapped[] => {
   if (fragmentedTemplate.length === 0) {
     return blocks;
   }
@@ -79,12 +79,12 @@ const consolidateFragments = (
   return consolidateFragments([joinedFragments, ...fragmentedTemplate.slice(2)], blocks);
 };
 
-const parseTemplate = (template: string): Block.Wrapped[] => {
+const parseTemplate = (template: string): Blocks.Wrapped[] => {
   const fragmented = fragmentTemplate(template);
   return consolidateFragments(fragmented);
 };
 
-const resolveBlock = (block: Block.Wrapped, data: any): string => {
+const resolveBlock = (block: Blocks.Wrapped, data: any): string => {
   if (!block.resolveAble) {
     return block.shard.content;
   }
