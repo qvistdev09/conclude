@@ -80,7 +80,7 @@ const consolidateFragments = (
   return consolidateFragments([joinedFragments, ...fragmentedTemplate.slice(2)], blocks);
 };
 
-const parseTemplate = (template: string): Blocks.Any[] => {
+const parseTemplateIntoBlocks = (template: string): Blocks.Any[] => {
   const fragmented = fragmentTemplate(template);
   return consolidateFragments(fragmented);
 };
@@ -101,11 +101,14 @@ const deepResolveBlock = (block: Blocks.Any, data: any): string => {
     return block.content;
   }
   const resolvedOuterLayer = resolveBlockSurfaceLayer(block, data);
-  return parseTemplate(resolvedOuterLayer).reduce(
+  return parseTemplateIntoBlocks(resolvedOuterLayer).reduce(
     (output, currentBlock) => (output += deepResolveBlock(currentBlock, data)),
     ""
   );
 };
 
 export const resolveRecursively = (template: string, data: any): string =>
-  parseTemplate(template).reduce((output, block) => (output += deepResolveBlock(block, data)), "");
+  parseTemplateIntoBlocks(template).reduce(
+    (output, block) => (output += deepResolveBlock(block, data)),
+    ""
+  );
