@@ -1,5 +1,3 @@
-import { resolveRecursively } from "./modules/main";
-import { createStore } from "./modules/store";
-import { resolveTemplateIncludes } from "./modules/include";
+import { ConcludeEngine } from "./modules/main";
 
-export { resolveRecursively, createStore, resolveTemplateIncludes };
+export { ConcludeEngine };

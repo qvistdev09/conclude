@@ -7,7 +7,7 @@ const extractIncludeKey = /(?<=").+(?=")/;
 const createIncludeBlockRegex = (key: string): RegExp =>
   new RegExp('[\\[]:#INCLUDE\\s"' + key + '":[\\]]', "g");
 
-export const resolveTemplateIncludes = (
+const resolveTemplateIncludes = (
   template: string,
   templatesMap: TemplatesStore,
   history: string[] = []
@@ -32,4 +32,12 @@ export const resolveTemplateIncludes = (
     return templateBody;
   }, template);
   return resolveTemplateIncludes(resolvedTemplate, templatesMap, branchedHistory);
+};
+
+export const resolveStoreIncludes = (store: TemplatesStore): TemplatesStore => {
+  const resolvedStore: TemplatesStore = {};
+  Object.keys(store).forEach((key) => {
+    resolvedStore[key] = resolveTemplateIncludes(store[key], store);
+  });
+  return resolvedStore;
 };

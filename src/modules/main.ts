@@ -6,7 +6,9 @@ import {
   appendInterpolationBlock,
 } from "./block-creators";
 import { resolveForBlock, resolveIfBlock, resolveInterpolationBlock } from "./block-resolvers";
-import { Blocks } from "./types";
+import { resolveStoreIncludes } from "./include";
+import { createStore } from "./store";
+import { Blocks, TemplatesStore } from "./types";
 
 const delimiters = /(\[:|:\])/g;
 const leftDelimiter = /\[:/g;
@@ -107,8 +109,21 @@ const deepResolveBlock = (block: Blocks.Any, data: any): string => {
   );
 };
 
-export const resolveRecursively = (template: string, data: any): string =>
+const resolveRecursively = (template: string, data: any): string =>
   parseTemplateIntoBlocks(template).reduce(
     (output, block) => (output += deepResolveBlock(block, data)),
     ""
   );
+
+export class ConcludeEngine {
+  store: TemplatesStore;
+
+  constructor(templatesFolder: string) {
+    const importedStore = createStore(templatesFolder);
+    this.store = resolveStoreIncludes(importedStore);
+  }
+
+  renderTemplate(templateName: string, data: any) {
+    return resolveRecursively(this.store[templateName], data);
+  }
+}
