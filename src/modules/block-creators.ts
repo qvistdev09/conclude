@@ -1,5 +1,4 @@
 import { allBrackets, getRegexMatch, regexExtract, spaces } from "./utils";
-import { resolveForBlock, resolveIfBlock, resolveInterpolationBlock } from "./block-resolvers";
 import { Blocks } from "./types";
 
 const createIfBlockConditional = (input: string): Blocks.If.Conditional | null => {
@@ -40,10 +39,10 @@ const createIfBlockConditional = (input: string): Blocks.If.Conditional | null =
   return null;
 };
 
-export const appendIfBlock = (input: string, blocks: Blocks.Wrapped[]): void => {
+export const appendIfBlock = (input: string, blocks: Blocks.Any[]): void => {
   const conditionObject = createIfBlockConditional(input);
   if (conditionObject) {
-    const ifBlock: Blocks.If = {
+    blocks.push({
       type: "if",
       chain: [
         {
@@ -52,11 +51,6 @@ export const appendIfBlock = (input: string, blocks: Blocks.Wrapped[]): void => 
         },
       ],
       chainClosed: false,
-    };
-    blocks.push({
-      resolveAble: true,
-      shard: ifBlock,
-      resolve: (data: any) => resolveIfBlock(ifBlock, data),
     });
   }
 };
@@ -64,64 +58,50 @@ export const appendIfBlock = (input: string, blocks: Blocks.Wrapped[]): void => 
 export const appendElseBlock = (
   input: string,
   type: "else" | "elseIf",
-  blocks: Blocks.Wrapped[]
+  blocks: Blocks.Any[]
 ): void => {
   const lastBlock = blocks.length > 0 ? blocks[blocks.length - 1] : null;
-  if (lastBlock && lastBlock.shard.type === "if" && !lastBlock.shard.chainClosed) {
+  if (lastBlock && lastBlock.type === "if" && !lastBlock.chainClosed) {
     if (type === "elseIf") {
       const conditionObject = createIfBlockConditional(input);
       if (conditionObject) {
-        lastBlock.shard.chain.push({
+        lastBlock.chain.push({
           type: "elseIf",
           condition: conditionObject,
         });
         return;
       }
     }
-    lastBlock.shard.chain.push({
+    lastBlock.chain.push({
       type: "else",
       result: getRegexMatch(regexExtract.bracesContent, input),
     });
-    lastBlock.shard.chainClosed = true;
+    lastBlock.chainClosed = true;
   }
 };
 
-export const appendForBlock = (input: string, blocks: Blocks.Wrapped[]): void => {
+export const appendForBlock = (input: string, blocks: Blocks.Any[]): void => {
   const [itemName, , arrayName] = getRegexMatch(regexExtract.parenthesesContent, input).split(" ");
   const forBody = getRegexMatch(regexExtract.bracesContent, input);
-  const forBlock: Blocks.For = {
+  blocks.push({
     type: "for",
     itemName,
     arrayName,
     forBody,
-  };
-  blocks.push({
-    resolveAble: true,
-    shard: forBlock,
-    resolve: (data: any) => resolveForBlock(forBlock, data),
   });
 };
 
-export const appendInterpolationBlock = (input: string, blocks: Blocks.Wrapped[]): void => {
+export const appendInterpolationBlock = (input: string, blocks: Blocks.Any[]): void => {
   const variableName = input.replace(allBrackets, "").replace(spaces, "");
-  const interpolationBlock: Blocks.Interpolation = {
+  blocks.push({
     type: "interpolation",
     variableName,
-  };
-
-  blocks.push({
-    resolveAble: true,
-    shard: interpolationBlock,
-    resolve: (data: any) => resolveInterpolationBlock(interpolationBlock, data),
   });
 };
 
-export const appendHtmlBlock = (input: string, blocks: Blocks.Wrapped[]): void => {
+export const appendHtmlBlock = (input: string, blocks: Blocks.Any[]): void => {
   blocks.push({
-    resolveAble: false,
-    shard: {
-      type: "html",
-      content: input,
-    },
+    type: "html",
+    content: input,
   });
 };

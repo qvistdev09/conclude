@@ -5,13 +5,14 @@ import {
   appendIfBlock,
   appendInterpolationBlock,
 } from "./block-creators";
+import { resolveForBlock, resolveIfBlock, resolveInterpolationBlock } from "./block-resolvers";
 import { Blocks } from "./types";
 
 const delimiters = /(\[:|:\])/g;
 const leftDelimiter = /\[:/g;
 const rightDelimiter = /:\]/g;
 
-const shards = {
+const blocksRegexes = {
   if: /^\[:#IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/,
   elseIf: /^\[:#ELSE_IF\s+\(.+\)\s+THEN\s+{(.|[\n\s\r])+}:\]$/,
   else: /^\[:#ELSE\s+{(.|[\n\s\r])+}:\]$/,
@@ -28,27 +29,27 @@ const balancedDelimiters = (str: string) => {
   return str.match(leftDelimiter)?.length === str.match(rightDelimiter)?.length;
 };
 
-const createAndAppendBlock = (input: string, blocks: Blocks.Wrapped[]): void => {
-  if (shards.empty.test(input)) {
+const createAndAppendBlock = (input: string, blocks: Blocks.Any[]): void => {
+  if (blocksRegexes.empty.test(input)) {
     return;
   }
-  if (shards.if.test(input)) {
+  if (blocksRegexes.if.test(input)) {
     appendIfBlock(input, blocks);
     return;
   }
-  if (shards.elseIf.test(input)) {
+  if (blocksRegexes.elseIf.test(input)) {
     appendElseBlock(input, "elseIf", blocks);
     return;
   }
-  if (shards.else.test(input)) {
+  if (blocksRegexes.else.test(input)) {
     appendElseBlock(input, "else", blocks);
     return;
   }
-  if (shards.for.test(input)) {
+  if (blocksRegexes.for.test(input)) {
     appendForBlock(input, blocks);
     return;
   }
-  if (shards.interpolation.test(input)) {
+  if (blocksRegexes.interpolation.test(input)) {
     appendInterpolationBlock(input, blocks);
     return;
   }
@@ -57,8 +58,8 @@ const createAndAppendBlock = (input: string, blocks: Blocks.Wrapped[]): void => 
 
 const consolidateFragments = (
   fragmentedTemplate: string[],
-  blocks: Blocks.Wrapped[] = []
-): Blocks.Wrapped[] => {
+  blocks: Blocks.Any[] = []
+): Blocks.Any[] => {
   if (fragmentedTemplate.length === 0) {
     return blocks;
   }
@@ -79,21 +80,32 @@ const consolidateFragments = (
   return consolidateFragments([joinedFragments, ...fragmentedTemplate.slice(2)], blocks);
 };
 
-const parseTemplate = (template: string): Blocks.Wrapped[] => {
+const parseTemplate = (template: string): Blocks.Any[] => {
   const fragmented = fragmentTemplate(template);
   return consolidateFragments(fragmented);
 };
 
-const resolveBlock = (block: Blocks.Wrapped, data: any): string => {
-  if (!block.resolveAble) {
-    return block.shard.content;
+const resolveBlockSurfaceLayer = (
+  block: Blocks.For | Blocks.Interpolation | Blocks.If,
+  data: any
+): string => {
+  return block.type === "for"
+    ? resolveForBlock(block, data)
+    : block.type === "if"
+    ? resolveIfBlock(block, data)
+    : resolveInterpolationBlock(block, data);
+};
+
+const deepResolveBlock = (block: Blocks.Any, data: any): string => {
+  if (block.type === "html") {
+    return block.content;
   }
-  const resolvedShard = block.resolve(data);
-  return parseTemplate(resolvedShard).reduce(
-    (output, currentBlock) => (output += resolveBlock(currentBlock, data)),
+  const resolvedOuterLayer = resolveBlockSurfaceLayer(block, data);
+  return parseTemplate(resolvedOuterLayer).reduce(
+    (output, currentBlock) => (output += deepResolveBlock(currentBlock, data)),
     ""
   );
 };
 
 export const resolveRecursively = (template: string, data: any): string =>
-  parseTemplate(template).reduce((output, block) => (output += resolveBlock(block, data)), "");
+  parseTemplate(template).reduce((output, block) => (output += deepResolveBlock(block, data)), "");

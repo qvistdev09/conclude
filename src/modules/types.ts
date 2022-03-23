@@ -47,16 +47,7 @@ export namespace Blocks {
     content: string;
   }
 
-  export type Wrapped =
-    | {
-        resolveAble: true;
-        shard: If | For | Interpolation;
-        resolve: (data: any) => string;
-      }
-    | {
-        resolveAble: false;
-        shard: Html;
-      };
+  export type Any = If | For | Interpolation | Html;
 }
 
 export interface TemplatesStore {
