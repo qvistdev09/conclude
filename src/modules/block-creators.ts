@@ -1,8 +1,8 @@
 import { allBrackets, getRegexMatch, regexExtract, spaces } from "./utils";
 import { resolveForBlock, resolveIfBlock, resolveInterpolationBlock } from "./block-resolvers";
-import { Blocks } from "./types";
+import { Block } from "./types";
 
-const createIfBlockConditional = (input: string): Blocks.If.Conditional | null => {
+const createIfBlockConditional = (input: string): Block.If.Conditional | null => {
   const conditionElements = getRegexMatch(regexExtract.parenthesesContent, input).split(" ");
   const result = getRegexMatch(regexExtract.bracesContent, input);
   if (
@@ -40,10 +40,10 @@ const createIfBlockConditional = (input: string): Blocks.If.Conditional | null =
   return null;
 };
 
-export const appendIfBlock = (input: string, blocks: Blocks.Wrapped[]): void => {
+export const appendIfBlock = (input: string, blocks: Block.Wrapped[]): void => {
   const conditionObject = createIfBlockConditional(input);
   if (conditionObject) {
-    const ifBlock: Blocks.If = {
+    const ifBlock: Block.If = {
       type: "if",
       chain: [
         {
@@ -64,7 +64,7 @@ export const appendIfBlock = (input: string, blocks: Blocks.Wrapped[]): void => 
 export const appendElseBlock = (
   input: string,
   type: "else" | "elseIf",
-  blocks: Blocks.Wrapped[]
+  blocks: Block.Wrapped[]
 ): void => {
   const lastBlock = blocks.length > 0 ? blocks[blocks.length - 1] : null;
   if (lastBlock && lastBlock.shard.type === "if" && !lastBlock.shard.chainClosed) {
@@ -86,10 +86,10 @@ export const appendElseBlock = (
   }
 };
 
-export const appendForBlock = (input: string, blocks: Blocks.Wrapped[]): void => {
+export const appendForBlock = (input: string, blocks: Block.Wrapped[]): void => {
   const [itemName, , arrayName] = getRegexMatch(regexExtract.parenthesesContent, input).split(" ");
   const forBody = getRegexMatch(regexExtract.bracesContent, input);
-  const forBlock: Blocks.For = {
+  const forBlock: Block.For = {
     type: "for",
     itemName,
     arrayName,
@@ -102,9 +102,9 @@ export const appendForBlock = (input: string, blocks: Blocks.Wrapped[]): void =>
   });
 };
 
-export const appendInterpolationBlock = (input: string, blocks: Blocks.Wrapped[]): void => {
+export const appendInterpolationBlock = (input: string, blocks: Block.Wrapped[]): void => {
   const variableName = input.replace(allBrackets, "").replace(spaces, "");
-  const interpolationBlock: Blocks.Interpolation = {
+  const interpolationBlock: Block.Interpolation = {
     type: "interpolation",
     variableName,
   };
@@ -116,7 +116,7 @@ export const appendInterpolationBlock = (input: string, blocks: Blocks.Wrapped[]
   });
 };
 
-export const appendHtmlBlock = (input: string, blocks: Blocks.Wrapped[]): void => {
+export const appendHtmlBlock = (input: string, blocks: Block.Wrapped[]): void => {
   blocks.push({
     resolveAble: false,
     shard: {

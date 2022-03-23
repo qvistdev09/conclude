@@ -1,4 +1,4 @@
-import { Blocks } from "./types";
+import { Block } from "./types";
 
 const operatorCompare = (operator: string, valueA: any, valueB: any): boolean => {
   switch (operator) {
@@ -19,7 +19,7 @@ const operatorCompare = (operator: string, valueA: any, valueB: any): boolean =>
   }
 };
 
-export const resolveIfBlock = (ifBlock: Blocks.If, data: any): string => {
+export const resolveIfBlock = (ifBlock: Block.If, data: any): string => {
   for (const chainElement of ifBlock.chain) {
     if (chainElement.type === "else") {
       return chainElement.result;
@@ -43,7 +43,7 @@ export const resolveIfBlock = (ifBlock: Blocks.If, data: any): string => {
   return "";
 };
 
-export const resolveForBlock = (forBlock: Blocks.For, data: any): string => {
+export const resolveForBlock = (forBlock: Block.For, data: any): string => {
   const array = data[forBlock.arrayName];
   if (!array || !Array.isArray(array)) {
     return "";
@@ -57,7 +57,7 @@ export const resolveForBlock = (forBlock: Blocks.For, data: any): string => {
 };
 
 export const resolveInterpolationBlock = (
-  interpolationBlock: Blocks.Interpolation,
+  interpolationBlock: Block.Interpolation,
   data: any
 ): string => {
   const value = data[interpolationBlock.variableName];

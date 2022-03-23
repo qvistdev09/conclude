@@ -1,4 +1,4 @@
-export namespace Blocks {
+export namespace Block {
   export interface If {
     type: "if";
     chain: If.ChainElement[];
