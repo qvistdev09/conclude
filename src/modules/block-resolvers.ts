@@ -1,3 +1,4 @@
+import { escapeString } from "./escape";
 import { Blocks } from "./types";
 
 const operatorCompare = (operator: string, valueA: any, valueB: any): boolean => {
@@ -62,10 +63,10 @@ export const resolveInterpolationBlock = (
 ): string => {
   const value = data[interpolationBlock.variableName];
   if (typeof value === "string") {
-    return value;
+    return escapeString(value);
   }
   if (typeof value === "number") {
-    return value.toString();
+    return escapeString(value.toString());
   }
   return "";
 };
