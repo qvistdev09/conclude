@@ -1,5 +1,6 @@
 import { escapeString } from "./escape";
 import { Blocks } from "./types";
+import { getDeepvalue } from "./utils";
 
 const operatorCompare = (operator: string, valueA: any, valueB: any): boolean => {
   switch (operator) {
@@ -61,7 +62,7 @@ export const resolveInterpolationBlock = (
   interpolationBlock: Blocks.Interpolation,
   data: any
 ): string => {
-  const value = data[interpolationBlock.variableName];
+  const value = getDeepvalue(data, interpolationBlock.variableName);
   if (typeof value === "string") {
     return escapeString(value);
   }

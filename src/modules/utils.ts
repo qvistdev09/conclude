@@ -13,3 +13,14 @@ export const getRegexMatch = (regExp: RegExp, input: string): string => {
   }
   return "";
 };
+
+export const getDeepvalue = (data: any, path: string, defaultValue = null) => {
+  return path
+    .split(".")
+    .filter((str) => str !== "")
+    .reduce(
+      (object, field) =>
+        object === undefined || object === defaultValue ? defaultValue : object[field],
+      data
+    );
+};
