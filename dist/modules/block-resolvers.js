@@ -46,7 +46,7 @@ const resolveIfBlock = (ifBlock, data) => {
 };
 exports.resolveIfBlock = resolveIfBlock;
 const resolveForBlock = (forBlock, data) => {
-    const array = data[forBlock.arrayName];
+    const array = (0, utils_1.getDeepvalue)(data, forBlock.arrayName, null);
     if (!array || !Array.isArray(array)) {
         return "";
     }
