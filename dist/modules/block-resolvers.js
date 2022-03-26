@@ -28,14 +28,14 @@ const resolveIfBlock = (ifBlock, data) => {
         }
         const { condition } = chainElement;
         if (condition.type === "truthinessCheck") {
-            const value = !!data[condition.variableName];
+            const value = !!(0, utils_1.getDeepvalue)(data, condition.variableName);
             if ((value && !condition.inverted) || (!value && condition.inverted)) {
                 return condition.result;
             }
         }
         if (condition.type === "comparison") {
-            const valueA = data[condition.leftHandVariable];
-            const valueB = data[condition.rightHandVariable];
+            const valueA = (0, utils_1.getDeepvalue)(data, condition.leftHandVariable);
+            const valueB = (0, utils_1.getDeepvalue)(data, condition.rightHandVariable);
             const { operator } = condition;
             if (operatorCompare(operator, valueA, valueB)) {
                 return condition.result;
