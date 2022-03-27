@@ -21,6 +21,19 @@ const operatorCompare = (operator: string, valueA: any, valueB: any): boolean =>
   }
 };
 
+const isString = /^".+"$/;
+const isNumber = /^[1-9][0-9]*\.{0,1}[0-9]*$/;
+
+const getVariableValue = (variableName: string, data: any) => {
+  if (isString.test(variableName)) {
+    return variableName.slice(1, -1);
+  }
+  if (isNumber.test(variableName)) {
+    return Number.parseFloat(variableName);
+  }
+  return getDeepvalue(data, variableName, null);
+};
+
 export const resolveIfBlock = (ifBlock: Blocks.If, data: any): string => {
   for (const chainElement of ifBlock.chain) {
     if (chainElement.type === "else") {
@@ -34,8 +47,9 @@ export const resolveIfBlock = (ifBlock: Blocks.If, data: any): string => {
       }
     }
     if (condition.type === "comparison") {
-      const valueA = getDeepvalue(data, condition.leftHandVariable);
-      const valueB = getDeepvalue(data, condition.rightHandVariable);
+      const { leftHandVariable, rightHandVariable } = condition;
+      const valueA = getVariableValue(leftHandVariable, data);
+      const valueB = getVariableValue(rightHandVariable, data);
       const { operator } = condition;
       if (operatorCompare(operator, valueA, valueB)) {
         return condition.result;
