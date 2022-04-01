@@ -30,9 +30,9 @@ const html = renderer.renderTemplate("profile.html", data);
 Conclude supports four types of blocks: if-blocks, for-blocks, include-blocks and data-interpolation-blocks.
 
 * if-blocks: renders certain html if condition is true.
-* for-blocks: iterates over an array an renders certain html for each element in the array
-* include-blocks: imports the entirety of another html view file
-* data-interpolation: simply interpolates the string value of a variable into the html
+* for-blocks: iterates over an array and renders certain html for each element in the array.
+* include-blocks: imports the entirety of another html view file.
+* data-interpolation: simply interpolates the string value of a variable into the html.
 
 A block in Conclude is always opened with the character set `[:` and closed with `:]`.
 
@@ -52,4 +52,18 @@ The following types of conditionals are supported:
 * `(name = "qvistdev09")` - strictly equal, equals === in javascript
 * `(name != "qvistdev09")` - strictly not equal, equals !== in javascript
 * `(number > 500)` - greater/lesser than comparisons (`>`, `<`, `>=`, `<=` are all supported)
+
+If-blocks can be a chain of else and else if.
+
+```html
+[:#IF (displayUsername) THEN {
+  <p>Qvistdev09</p>
+}:]
+[:#ELSE_IF (displayHobby) THEN {
+  <p>Cooking</p>
+}:]
+[:#ELSE {
+  <p>No condition was met!</p>
+}:]
+```
 
