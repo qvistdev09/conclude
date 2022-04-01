@@ -1,3 +1,5 @@
 import { ConcludeEngine } from "./modules/main";
 
-export { ConcludeEngine };
+const createEngine = (templatesFolderPath: string) => new ConcludeEngine(templatesFolderPath);
+
+export { createEngine };
