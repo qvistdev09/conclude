@@ -34,6 +34,10 @@ A block in Conclude is always opened with the characters `[:` and closed with `:
 ### If-blocks
 
 ```html
-<p>Test</p>
+[:#IF (displayUsername) THEN {
+  <p>Qvistdev09</p>
+}:]
 ```
+
+If the condition inside the parentheses is true, the html content inside the following curly braces will be rendered.
 
