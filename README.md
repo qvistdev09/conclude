@@ -41,3 +41,6 @@ A block in Conclude is always opened with the characters `[:` and closed with `:
 
 If the condition inside the parentheses is true, the html content inside the following curly braces will be rendered.
 
+The following types of conditionals are supported:
+* `(truthiness)` - normal javascript truthiness check
+
