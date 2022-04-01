@@ -1,18 +1,16 @@
 {
   "name": "conclude",
   "version": "0.1.0",
-  "description": "",
+  "description": "A HTML template engine",
   "main": "dist/index.js",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "dev": "nodemon dist/index.js",
-    "ts-watch": "tsc --watch"
+    "dev": "tsc --watch & nodemon dist/index.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/qvistdev09/conclude.git"
   },
-  "keywords": [],
   "author": "Oscar Lindqvist",
   "license": "MIT",
   "bugs": {
