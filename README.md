@@ -2,7 +2,7 @@
 
 > a html template engine for server-side rendering
 
-## usage
+## Usage
 
 Import the `createEngine` function from the index file and instantiate a new renderer by supplying the folder where you keep your html views.
 
@@ -30,3 +30,12 @@ const html = renderer.renderTemplate("profile.html", data);
 Conclude supports four types of blocks: if-blocks, for-blocks, include-blocks and data-interpolation-blocks.
 
 A block in Conclude is always opened with the characters `[:` and closed with `:]`.
+
+### If-blocks
+
+```html
+[:#IF (showUsername) THEN {
+  <p>Qvistdev09</p>
+}:]
+```
+
