@@ -34,8 +34,6 @@ A block in Conclude is always opened with the characters `[:` and closed with `:
 ### If-blocks
 
 ```html
-[:#IF (showUsername) THEN {
-  <p>Qvistdev09</p>
-}:]
+ <p>Qvistdev09</p>
 ```
 
