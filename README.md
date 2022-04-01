@@ -1,6 +1,6 @@
 # Conclude
 
-> a html template engine for server-side rendering
+> a html template engine for server-side rendering in node.js applications
 
 ## Usage
 
