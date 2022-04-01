@@ -43,4 +43,8 @@ If the condition inside the parentheses is true, the html content inside the fol
 
 The following types of conditionals are supported:
 * `(truthiness)` - normal javascript truthiness check
+* `(!truthiness)` - inverted truthiness check
+* `(name = "qvistdev09")` - strictly equal, equals === in javascript
+* `(name != "qvistdev09")` - strictly not equal, equals !== in javascript
+* `(number > 500)` - greater/lesser than comparisons (`>`, `<`, `>=`, `<=` are all supported)
 
