@@ -79,3 +79,20 @@ For-blocks repeat a block of html for each element in an array.
   </div>
 }:]
 ```
+
+### Include-blocks
+
+Include-blocks simply imports the contents from another view file.
+
+```html
+<body>
+  [:#INCLUDE "navigation.html":]
+  <p>Some content here!</p>
+  [:#INCLUDE "footer.html":]
+</body>
+```
+
+Circular imports are not possible and will be ignored.
+
+
+
