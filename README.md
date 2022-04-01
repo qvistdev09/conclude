@@ -67,3 +67,15 @@ If-blocks can be a chain of else and else if.
 }:]
 ```
 
+### For-blocks
+
+For-blocks repeat a block of html for each element in an array.
+
+```html
+[:#FOR (book IN books) {
+  <div class="card__book">
+    <h2>[:book.title:]</h2>
+    <p>[:book.description:]</p>
+  </div>
+}:]
+```
