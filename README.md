@@ -13,7 +13,7 @@ import path from 'path';
 const renderer = createEngine(path.resolve(__dirname, './views'));
 ```
 
-The renderer has one method, `renderTemplate`, which expects a filename, referencing one of your html views, and a data object, needed to resolve the template blocks into pure html.
+The renderer has one method, `renderTemplate`, which returns the rendered template as a string. It expects a filename, referencing one of your views, and a data object of any shape, which holds the data needed to resolve the html template.
 
 ```javascript
 const data = {
