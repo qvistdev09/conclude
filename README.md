@@ -113,4 +113,4 @@ You can also access nested values with dot notation.
 
 Conclude does not have exhaustive security options. As a bare minimum, the following characters are html encoded: `&`, `"`, `'`, `<`, `>`.
 
-Do not use this package without further html sanitization. For more information, refer to [OWASP - Cross Site Scripting Prevention Cheat Sheet][https://cheatsheetseries.owasp.org/cheatsheets/cross_site_scripting_prevention_cheat_sheet.html]
+Do not use this package without further html sanitization. For more information, refer to [OWASP - Cross Site Scripting Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/cross_site_scripting_prevention_cheat_sheet.html)
