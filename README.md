@@ -82,7 +82,7 @@ For-blocks repeat a block of html for each element in an array.
 
 ### Include-blocks
 
-Include-blocks simply imports the contents from another view file.
+Include-blocks simply import the contents from another view file.
 
 ```html
 <body>
@@ -93,6 +93,20 @@ Include-blocks simply imports the contents from another view file.
 ```
 
 Circular imports are not possible and will be ignored.
+
+### Data-interpolation-blocks
+
+These blocks interpolate a variable from the data object into the html. Only strings and numbers (on which `.toString()` is called) are considered.
+
+```html
+<p>[:someValue:]</p>
+```
+
+You can also access nested values with dot notation.
+
+```html
+<p>[:person.details.streetName:]</p>
+```
 
 
 
