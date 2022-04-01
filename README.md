@@ -2,6 +2,21 @@
 
 > a html template engine for server-side rendering in node.js applications
 
+## Table of Contents
+
+* [Background](#background)
+* [Usage](#usage)
+  * [Template blocks](#template-blocks)
+    * [If-blocks](#if-blocks)
+    * [For-blocks](#for-blocks)
+    * [Include-blocks](#include-blocks)
+    * [Data-interpolation-blocks](#data-interpolation-blocks)
+* [Security](#security)
+
+## Background
+
+I wrote this package mostly to challenge myself to understand how a html template engine could be built from scratch. It proved to be a great exercise in recursion and regexes. It is not a published package, and was purely made for the sake of learning, so I do not recommend using it in actual projects.
+
 ## Usage
 
 Import the `createEngine` function from the index file and instantiate a new renderer by supplying the folder where you keep your html views.
